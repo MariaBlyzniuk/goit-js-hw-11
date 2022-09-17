@@ -19,35 +19,42 @@ formRef.addEventListener('submit', onFormSubmit);
 btnLoadMoreRef.addEventListener('click', onClickLoadMoreBtn);
 
 let searchImg = '';
+let currentHits = 0;
 async function onFormSubmit(e) {
-    e.preventDefault();
+  e.preventDefault();
   clearCardsContainer();
   resetPages();
 
     searchImg = e.currentTarget.searchQuery.value.trim();
-    console.log(searchImg);
-
-    const {hits} = await fetchImages(searchImg);
-    // console.log(data);
+    
+  const data = await fetchImages(searchImg);
+  currentHits = data.hits.length;
+    
     e.target.reset();
 
-    if (hits.length === 0) {
-        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+  if (data.hits.length === 0) {
+      btnLoadMoreRef.classList.add('is-hidden');
+      Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+    return;
 
-  }
-    if (hits.length > 40) {
-    btnLoadMoreRef.classList.remove('is-hidden');
-  } else {
-    btnLoadMoreRef.classList.add('is-hidden');
-  }
+  };
+  
+  //   if (hits.length > 40) {
+  //   btnLoadMoreRef.classList.remove('.is-hidden');
+  // } else {
+  //   btnLoadMoreRef.classList.add('.is-hidden');
+  // };
 
-  if (hits.length > 0) {
-    Notiflix.Notify.success(`Hooray! We found ${hits.length} images.`);
+  if (data.totalHits > 0) {
+    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
     galleryRef.innerHTML = '';
-  }
-  renderCards(hits);
+  };
+  renderCards(data.hits);
+  btnLoadMoreRef.classList.remove('is-hidden');
   lightbox.refresh();
   endCollectionText.classList.add('is-hidden');
+  
+
 }
 
 function createCards(cards) {
@@ -83,7 +90,26 @@ function clearCardsContainer() {
 
 async function onClickLoadMoreBtn() {
   console.log('onClickLoadMoreBtn')
-  const { hits } = await fetchImages(searchImg);
-  renderCards(hits);
+  const data = await fetchImages(searchImg);
+  renderCards(data.hits);
   lightbox.refresh();
+
+  currentHits += data.hits.length;
+  
+    if (currentHits === data.totalHits) {
+    btnLoadMoreRef.classList.add('is-hidden');
+    endCollectionText.classList.remove('is-hidden');
+  }
+  skrollGallery()
+}
+
+function skrollGallery() {
+          const { height: cardHeight } = document
+        .querySelector('.gallery')
+        .firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
 }
