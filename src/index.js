@@ -7,12 +7,13 @@ import { fetchImages, resetPages } from './fetch_images';
 
 const formRef = document.querySelector('.search-form');
 const galleryRef = document.querySelector('.gallery')
-const btnLoadMoreRef = document.querySelector('.load-more');
+const btnLoadMoreRef = document.querySelector('.btn-load-more');
+const endCollectionText = document.querySelector('.end-collection-text');
 
 const lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
   captionsDelay: 250,
-})
+});
 
 formRef.addEventListener('submit', onFormSubmit);
 btnLoadMoreRef.addEventListener('click', onClickLoadMoreBtn);
@@ -33,9 +34,20 @@ async function onFormSubmit(e) {
     if (hits.length === 0) {
         Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
 
-    }
+  }
+    if (hits.length > 40) {
+    btnLoadMoreRef.classList.remove('is-hidden');
+  } else {
+    btnLoadMoreRef.classList.add('is-hidden');
+  }
+
+  if (hits.length > 0) {
+    Notiflix.Notify.success(`Hooray! We found ${hits.length} images.`);
+    galleryRef.innerHTML = '';
+  }
   renderCards(hits);
   lightbox.refresh();
+  endCollectionText.classList.add('is-hidden');
 }
 
 function createCards(cards) {
@@ -68,6 +80,7 @@ function renderCards(cards) {
 function clearCardsContainer() {
     galleryRef.innerHTML = '';
 } 
+
 async function onClickLoadMoreBtn() {
   console.log('onClickLoadMoreBtn')
   const { hits } = await fetchImages(searchImg);
